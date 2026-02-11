@@ -3,7 +3,7 @@
 
 ```json
 [
-  {
+    {
     "name": "POSTGRES_DB",
     "value": "todos",
     "slotSetting": false
@@ -15,7 +15,7 @@
   },
   {
     "name": "POSTGRES_PASSWORD",
-    "value": "パスワード",
+    "value": "Knmt1234!",
     "slotSetting": false
   },
   {
@@ -35,22 +35,22 @@
   },
   {
     "name": "SENDER_EMAIL",
-    "value": "nomhiro1204@gmail.com",
+    "value": "kttxoww@gmail.com",
     "slotSetting": false
   },
   {
     "name": "EMAIL_PASSWORD",
-    "value": "ohxn hdsb xvck cmxj",
+    "value": "jejfbjrwvhdawwdd",
     "slotSetting": false
   },
   {
     "name": "RECIPIENT_EMAIL",
-    "value": "nomhiro1204@gmail.com",
+    "value": "kttxoww@gmail.com",
     "slotSetting": false
   },
   {
     "name": "SLEEP_SECONDS",
-    "value": "3600",
+    "value": "60",
     "slotSetting": false
   }
 ]
@@ -71,11 +71,7 @@
 ## コンテナデプロイ設定
 
 ```bash
-az webapp config container set `
-  --name udemytodoapp-notify `
-  --resource-group rg-todo `
-  --container-image-name udemytodoappacr01.azurecr.io/notify-service:latest
-  --
+az webapp config container set --name udemytodoapp-notify --resource-group rg-dev-todo --container-image-name udemytodoappacr01.azurecr.io/udemy-notify-service:dev
 ```
 
 継続的デプロイをONに

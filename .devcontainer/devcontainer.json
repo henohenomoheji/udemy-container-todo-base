@@ -1,0 +1,17 @@
+{
+  "name": "azure-deploy-devcontainer",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {},
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-bicep",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-azuretools.vscode-azureresourcegroups",
+        "ms-vscode.azure-account",
+        "github.vscode-github-actions"
+      ]
+    }
+  },
+  "postCreateCommand": "az version && azd version && az bicep version"
+}

@@ -1,29 +1,33 @@
-
-
 ## ローカル開発準備
-init.sqlのタスクの更新日時を変更。稼働確認できるように、翌日などにする
 
-PostgresのDockerを起動
+init.sql のタスクの更新日時を変更。稼働確認できるように、翌日などにする
+
+Postgres の Docker を起動
+
 ```bash
-docker-compose -f .\docker-compose-postgres.yml up -d
+docker-compose -f ./docker-compose-postgres.yml up -d
 ```
 
-Postgresコンテナのログを確認
+Postgres コンテナのログを確認
+
 ```bash
 docker logs postgres_db
 ```
 
-Postgresのコンテナに入る
+Postgres のコンテナに入る
+
 ```bash
 docker exec -it postgres_db psql -U udemy_learn_user -d udemy_learn_db
 ```
 
 テーブル一覧を確認
+
 ```sql
 \dt
 ```
 
 テーブルの中身を確認
+
 ```sql
 \d todos
 ```
@@ -37,14 +41,19 @@ SELECT * FROM todos;
 ```
 
 #### そのほか
-DockerのVolumeを削除
+
+Docker の Volume を削除
+
 ```bash
 docker volume rm udemy-container-todo-app_postgres_data
 ```
 
 ## ローカル開発
-### ToDoアプリ
+
+### ToDo アプリ
+
 .env.local ファイルを作成し、以下の内容を記述します。
+
 ```env
 POSTGRES_USER=udemy_learn_user
 POSTGRES_PASSWORD=udemy_learn_password
@@ -55,20 +64,22 @@ POSTGRES_SSLMODE=disable
 ```
 
 モジュールをインストールします。
+
 ```bash
 npm install
 npm run dev
 ```
 
 ### 通知サービス
-#### Googleメール送信
 
-Googleアカウントにログインし、アプリパスワードを設定します。
+#### Google メール送信
+
+Google アカウントにログインし、アプリパスワードを設定します。
 https://myaccount.google.com/apppasswords
 アプリ名とパスワードをコピーして控えておいてください。
 
 .env ファイルを作成し、以下の内容を記述します。
-SLEEP_SECONDSは、通知サービスが何秒ごとにデータベースを確認するかを指定します。動作確認のためであれば、60sなどに設定しておくと良いでしょう。
+SLEEP_SECONDS は、通知サービスが何秒ごとにデータベースを確認するかを指定します。動作確認のためであれば、60s などに設定しておくと良いでしょう。
 
 ```env
 POSTGRES_USER="udemy_learn_user"
@@ -83,19 +94,22 @@ RECIPIENT_EMAIL="メールアドレス"
 SLEEP_SECONDS="3600"
 ```
 
-VSCodeをnotify-serviceフォルダで開き、ターミナルを開いて以下のコマンドを実行します。
+VSCode を notify-service フォルダで開き、ターミナルを開いて以下のコマンドを実行します。
+
 ```bash
 pip install -r requirements.txt
 ```
+
 ```bash
 python notify_service.py
 ```
 
+## Docker ビルドと起動
 
-## Dockerビルドと起動
+### ToDo アプリの環境変数ファイル
 
-### ToDoアプリの環境変数ファイル
-.env.local.containerファイルを作成し、以下の内容を記述します。
+.env.local.container ファイルを作成し、以下の内容を記述します。
+
 ```env
 POSTGRES_USER=udemy_learn_user
 POSTGRES_PASSWORD=udemy_learn_password
@@ -104,8 +118,10 @@ POSTGRES_HOST=postgres_db
 POSTGRES_PORT=5432
 ```
 
-### notifyサービスの環境変数ファイル
-.env.local.containerファイルを作成し、以下の内容を記述します。
+### notify サービスの環境変数ファイル
+
+.env.local.container ファイルを作成し、以下の内容を記述します。
+
 ```env
 POSTGRES_USER="udemy_learn_user"
 POSTGRES_PASSWORD="udemy_learn_password"
@@ -119,47 +135,54 @@ RECIPIENT_EMAIL="メールアドレス"
 SLEEP_SECONDS="3600"
 ```
 
-docker-compose.local.ymlを使用して、Dockerイメージをビルドして起動します。
+docker-compose.local.yml を使用して、Docker イメージをビルドして起動します。
+
 ```bash
 docker-compose -f docker-compose.local.yml up -d
 ```
 
-# Azureリソースの作成
-前提
-- Azure CLIがインストールされていること
-- azdがインストールされていること
-- VSCodeにBicep拡張機能がインストールされていること
+# Azure リソースの作成
 
-### Azure CLIのログイン
+前提
+
+- Azure CLI がインストールされていること
+- azd がインストールされていること
+- VSCode に Bicep 拡張機能がインストールされていること
+
+### Azure CLI のログイン
+
 ```bash
 az login
 ```
 
 ログイン情報の確認
+
 ```bash
 az account show
 ```
 
-### Azureリソースの作成
+### Azure リソースの作成
+
 ```bash
-cd .\infra
+cd ./infra
 ```
 
-main.bicepのprefix名を一意な名前に変更します。小文字英字と数字のみにしましょう。
+main.bicep の prefix 名を一意な名前に変更します。小文字英字と数字のみにしましょう。
 例）todoappshrkm0708
+
 ```bash
 azd up
 ```
 
-一意なリソース名：todoappなど
+一意なリソース名：todoapp など
 リージョンを選ぶ：japaneast
-Postgresのパスワード：パスワード
+Postgres のパスワード：パスワード
 
 ```bash
 PS C:\Users\AdmUser\Documents\Udemy\udemy-azure-container\udemy-container-todo-base> azd up
 ? Pick a resource group to use: 1. Create a new resource group
 ? Select a location to create the resource group in: 10. (Asia Pacific) Japan East (japaneast)
-? Enter a name for the new resource group: (rg-todo) 
+? Enter a name for the new resource group: (rg-todo)
 
 ? Enter a name for the new resource group: rg-todo
 
@@ -184,8 +207,9 @@ SUCCESS: Your up workflow to provision and deploy to Azure completed in 5 minute
 ```
 
 ### 各リソースへの設定と手動デプロイ&稼働確認
-./infraフォルダ参照
 
-- PostgreSQLにデータベース作成とテーブル作成、データ登録
-- ACRにToDoアプリと通知サービスのコンテナイメージをプッシュ
-- App ServiceにToDoアプリのデプロイ
+./infra フォルダ参照
+
+- PostgreSQL にデータベース作成とテーブル作成、データ登録
+- ACR に ToDo アプリと通知サービスのコンテナイメージをプッシュ
+- App Service に ToDo アプリのデプロイ

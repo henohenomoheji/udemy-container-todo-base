@@ -10,12 +10,12 @@
   },
   {
     "name": "POSTGRES_HOST",
-    "value": "udemytodoappshrkm0708-pg.postgres.database.azure.com",
+    "value": "udemytodoapp-pg.postgres.database.azure.com",
     "slotSetting": false
   },
   {
     "name": "POSTGRES_PASSWORD",
-    "value": "P@ssw0rd",
+    "value": "Knmt1234!",
     "slotSetting": false
   },
   {
@@ -49,10 +49,7 @@ ACRへの権限付与
 
 
 ```bash
-az webapp config container set `
-  --name udemytodoapp-app `
-  --resource-group rg-todo `
-  --container-image-name udemytodoappacr01.azurecr.io/todo-app:latest
+az webapp config container set --name udemytodoapp-app --resource-group rg-dev-todo --container-image-name udemytodoappacr01.azurecr.io/udemy-todoapp:dev
 ```
 
 Portalで継続的デプロイをONに
@@ -64,6 +61,6 @@ AzurePortalで確認
 ![alt text](image-12.png)
 
 ```bash
-az webapp config appsettings set --resource-group rg-todo --name udemytodoapp-app --settings TEST="TEST"
+az webapp config appsettings set --resource-group rg-dev-todo --name udemytodoapp-app --settings TEST="TEST"
 ```
 
