@@ -1,29 +1,41 @@
-import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
 import datetime
-import smtplib
-from email.mime.text import MIMEText
-import pytz
 import logging
-from dateutil.parser import parse
-import time
+import os
+import smtplib
 import sys
+import time
+from email.mime.text import MIMEText
+from dotenv import load_dotenv
+from pathlib import Path
+env_path = Path(__file__).parent / ".env"
+load_dotenv(env_path)
+
+import psycopg2
+import pytz
+from dateutil.parser import parse
+from psycopg2.extras import RealDictCursor
 
 # ログ設定
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', stream=sys.stdout)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
+)
 
 # 定数（PostgreSQL用）
-POSTGRES_USER = os.getenv('POSTGRES_USER')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-POSTGRES_DB = os.getenv('POSTGRES_DB')
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
-POSTGRES_SSLMODE = os.getenv('POSTGRES_SSLMODE', 'disable')
-JST = pytz.timezone('Asia/Tokyo')
-SLEEP_SECONDS = int(os.getenv('SLEEP_SECONDS', '3600'))  # デフォルトは3600秒（1時間）
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_SSLMODE = os.getenv("POSTGRES_SSLMODE", "disable")
+JST = pytz.timezone("Asia/Tokyo")
+SLEEP_SECONDS = int(os.getenv("SLEEP_SECONDS", "3600"))  # デフォルトは3600秒（1時間）
 
-print(f"PostgreSQL connection settings: {POSTGRES_USER}, {POSTGRES_DB}, {POSTGRES_HOST}, {POSTGRES_PORT}, {POSTGRES_SSLMODE}")
+print(
+    f"PostgreSQL connection settings: {POSTGRES_USER}, {POSTGRES_DB}, {POSTGRES_HOST}, {POSTGRES_PORT}, {POSTGRES_SSLMODE}"
+)
+
 
 # PostgreSQL接続関数
 def get_pg_connection():
@@ -35,12 +47,13 @@ def get_pg_connection():
             host=POSTGRES_HOST,
             port=POSTGRES_PORT,
             sslmode=POSTGRES_SSLMODE,
-            cursor_factory=RealDictCursor
+            cursor_factory=RealDictCursor,
         )
         return conn
     except Exception as e:
         logging.error(f"Failed to connect to PostgreSQL: {e}")
         return None
+
 
 def get_todos():
     """PostgreSQLからToDoタスクを取得"""
@@ -49,7 +62,7 @@ def get_todos():
         return []
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, title, due_date as \"dueDate\" FROM todos")
+            cur.execute('SELECT id, title, due_date as "dueDate" FROM todos')
             todos = cur.fetchall()
             logging.info(f"{len(todos)} tasks retrieved from PostgreSQL.")
             return todos
@@ -59,38 +72,45 @@ def get_todos():
     finally:
         conn.close()
 
+
 def send_email(subject, body):
     """メールを送信"""
     try:
-        sender_email = os.getenv('SENDER_EMAIL')
-        sender_password = os.getenv('EMAIL_PASSWORD')
-        recipient_email = os.getenv('RECIPIENT_EMAIL')
+        sender_email = os.getenv("SENDER_EMAIL")
+        sender_password = os.getenv("EMAIL_PASSWORD")
+        recipient_email = os.getenv("RECIPIENT_EMAIL")
 
         if not all([sender_email, sender_password, recipient_email]):
             logging.error("Email credentials or recipient email are not set.")
             return
 
-        msg = MIMEText(body)
-        msg['Subject'] = subject
-        msg['From'] = sender_email
-        msg['To'] = recipient_email
+        msg = MIMEText(body, "plain", "utf-8")
+        msg["Subject"] = subject
+        msg["From"] = sender_email
+        msg["To"] = recipient_email
 
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, recipient_email, msg.as_string())
         logging.info(f"Email sent: {subject}")
     except smtplib.SMTPAuthenticationError as e:
-        logging.error(f"Failed to send email due to authentication error: {e}. "
-                      "Ensure you are using an application-specific password. "
-                      "Refer to https://support.google.com/mail/?p=InvalidSecondFactor for more details.")
+        logging.error(
+            f"Failed to send email due to authentication error: {e}. "
+            "Ensure you are using an application-specific password. "
+            "Refer to https://support.google.com/mail/?p=InvalidSecondFactor for more details."
+        )
     except Exception as e:
         logging.error(f"Failed to send email: {e}")
 
+
 def create_email_body(tasks, task_type):
     """メール本文を作成"""
-    task_list = "\n".join([f"- {task['title']} (Due: {task['dueDate']})" for task in tasks])
+    task_list = "\n".join(
+        [f"- {task['title']} (Due: {task['dueDate']})" for task in tasks]
+    )
     return f"{task_type}:\n{task_list}" if tasks else ""
+
 
 def notify_due_tasks():
     """期限に応じてタスクを通知"""
@@ -100,7 +120,7 @@ def notify_due_tasks():
         tomorrow = today + datetime.timedelta(days=1)
 
         def get_due_date(todo):
-            due = todo['dueDate']
+            due = todo["dueDate"]
             if isinstance(due, str):
                 return parse(due).date()
             elif isinstance(due, datetime.datetime):
@@ -110,7 +130,9 @@ def notify_due_tasks():
 
         today_tasks = [todo for todo in todos if get_due_date(todo) == today]
         tomorrow_tasks = [todo for todo in todos if get_due_date(todo) == tomorrow]
-        expired_tasks = [todo for todo in todos if get_due_date(todo) and get_due_date(todo) < today]
+        expired_tasks = [
+            todo for todo in todos if get_due_date(todo) and get_due_date(todo) < today
+        ]
 
         if today_tasks:
             print(f"Tasks due today: {len(today_tasks)}")
@@ -126,17 +148,20 @@ def notify_due_tasks():
             send_email("【Expired Tasks】", body)
     except Exception as e:
         logging.error(f"An error occurred while notifying tasks: {e}")
-        
+
 
 def main():
     logging.info("Notification service started.")
     try:
         while True:
             notify_due_tasks()  # SLEEP_SECONDSごとに通知を実行
-            logging.info(f"Notification task completed. Waiting {SLEEP_SECONDS} seconds...")
+            logging.info(
+                f"Notification task completed. Waiting {SLEEP_SECONDS} seconds..."
+            )
             time.sleep(SLEEP_SECONDS)
     except Exception as e:
         logging.error(f"An error occurred during notification execution: {e}")
+
 
 if __name__ == "__main__":
     main()
